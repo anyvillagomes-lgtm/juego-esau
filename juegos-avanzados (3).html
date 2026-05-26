@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Juegos Avanzados 🎓</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;900&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #F0F4FF;
+  --c3: #8B2FC9; --c3b: #C27DFF;
+  --c4: #0A8A5A; --c4b: #3EC99A;
+  --c5: #C8380A; --c5b: #FF7A50;
+  --c6: #0B4FA8; --c6b: #4B9FFF;
+  --green: #1A9E5C; --green-l: #E8FAF1;
+  --red: #D03030;  --red-l: #FFF0F0;
+  --radius: 20px; --shadow: 0 6px 28px rgba(0,0,0,0.11);
+}
+body { font-family:'Nunito',sans-serif; background:var(--bg); min-height:100vh; overflow-x:hidden; }
+body::before {
+  content:''; position:fixed; inset:0;
+  background-image: radial-gradient(circle,#c8b4f8 1.5px,transparent 1.5px),radial-gradient(circle,#b4e4d8 1px,transparent 1px);
+  background-size:60px 60px,30px 30px; background-position:0 0,15px 15px;
+  opacity:0.25; pointer-events:none; z-index:0;
+}
+.screen { display:none; position:relative; z-index:1; }
+.screen.active { display:block; }
+#home.active { display:flex; }
+
+/* HOME */
+#home { flex-direction:column; align-items:center; padding:40px 20px 60px; }
+.hero { text-align:center; margin-bottom:40px; animation:fadeDown 0.5s ease both; }
+.hero-emoji { font-size:clamp(2.8rem,9vw,4.5rem); display:block; margin-bottom:10px; animation:bounce 2.5s infinite; }
+@keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+.hero h1 { font-size:clamp(1.7rem,5vw,2.8rem); font-weight:900; color:#1A1A2E; margin-bottom:6px; }
+.hero p { font-size:clamp(0.88rem,2.5vw,1.05rem); color:#666; font-weight:600; }
+.games { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:20px; width:100%; max-width:780px; }
+.game-card { border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden; cursor:pointer; transition:transform 0.2s,box-shadow 0.2s; animation:fadeUp 0.5s ease both; }
+.game-card:hover { transform:translateY(-5px) scale(1.01); box-shadow:0 14px 40px rgba(0,0,0,0.15); }
+.game-card:nth-child(1){animation-delay:0.08s}.game-card:nth-child(2){animation-delay:0.16s}.game-card:nth-child(3){animation-delay:0.24s}
+.card-header { padding:26px 22px 20px; }
+.c3 .card-header{background:linear-gradient(135deg,var(--c3),var(--c3b))}
+.c4 .card-header{background:linear-gradient(135deg,var(--c4),var(--c4b))}
+.c5 .card-header{background:linear-gradient(135deg,var(--c5),var(--c5b))}
+.c6 .card-header{background:linear-gradient(135deg,var(--c6),var(--c6b))}
+.card-icon { font-size:2.8rem; display:block; margin-bottom:10px; }
+.card-header h2 { font-size:clamp(1rem,3.5vw,1.25rem); font-weight:900; color:#fff; margin-bottom:5px; }
+.card-header p { font-size:0.82rem; color:rgba(255,255,255,0.88); font-weight:600; }
+.card-body { background:#fff; padding:16px 22px 20px; }
+.tags { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:12px; }
+.tag { padding:3px 11px; border-radius:99px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.3px; }
+.c3 .tag{background:#F5EEFF;color:var(--c3)}.c4 .tag{background:#E6FFF5;color:var(--c4)}.c5 .tag{background:#FFF0EA;color:var(--c5)}.c6 .tag{background:#E6F0FF;color:var(--c6)}
+.play-btn { width:100%; padding:12px; border-radius:12px; border:none; font-size:0.95rem; font-family:'Nunito',sans-serif; font-weight:900; cursor:pointer; color:#fff; transition:opacity 0.15s; }
+.c3 .play-btn{background:var(--c3)}.c4 .play-btn{background:var(--c4)}.c5 .play-btn{background:var(--c5)}.c6 .play-btn{background:var(--c6)}
+.play-btn:hover{opacity:0.85}
+footer { text-align:center; font-size:0.8rem; color:#bbb; font-weight:600; margin-top:40px; }
+footer span{color:var(--c5)}
+
+/* GAME NAV */
+.game-nav { display:flex; align-items:center; justify-content:space-between; padding:13px 18px; background:#fff; border-bottom:1.5px solid #f0f0f0; position:sticky; top:0; z-index:10; gap:8px; flex-wrap:wrap; }
+.game-nav h2 { font-size:0.95rem; font-weight:900; color:#1A1A2E; }
+.nav-right { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.timer-badge { background:#1A1A2E; color:#fff; border-radius:99px; padding:6px 14px; font-size:13px; font-weight:900; min-width:68px; text-align:center; }
+.timer-badge.warn{background:#D03030}
+.back-btn { background:#f0f0f0; border:none; border-radius:99px; padding:7px 14px; font-size:13px; font-family:'Nunito',sans-serif; font-weight:700; cursor:pointer; color:#333; }
+.back-btn:hover{background:#e2e2e2}
+.lives-disp{font-size:1.2rem;letter-spacing:2px}
+.game-inner { padding:18px 16px 50px; display:flex; flex-direction:column; align-items:center; }
+.topbar { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; width:100%; max-width:560px; flex-wrap:wrap; gap:8px; }
+.stats { display:flex; gap:14px; flex-wrap:wrap; }
+.stat { font-size:13px; color:#666; font-weight:600; }
+.stat b { color:#1A1A2E; font-weight:900; }
+.g-btn { padding:7px 16px; font-size:13px; font-family:'Nunito',sans-serif; font-weight:700; border-radius:99px; border:none; background:#1A1A2E; color:#fff; cursor:pointer; transition:opacity 0.15s; white-space:nowrap; }
+.g-btn:hover{opacity:0.82}
+.g-btn.sec{background:#f0f0f0;color:#333}.g-btn.sec:hover{background:#e2e2e2}
+.progress-wrap { width:100%; max-width:560px; height:7px; background:#eee; border-radius:99px; margin-bottom:16px; overflow:hidden; }
+.progress-bar { height:100%; border-radius:99px; transition:width 0.4s ease; }
+.feedback { text-align:center; font-size:1rem; font-weight:700; min-height:28px; margin-top:10px; }
+.fb-ok{color:var(--green)}.fb-no{color:var(--red)}
+.endbox { text-align:center; padding:2rem 1rem; animation:fadeUp 0.4s ease both; }
+.end-emoji{font-size:3.5rem;display:block;margin-bottom:8px}
+.end-title{font-size:1.35rem;font-weight:900;color:#1A1A2E;margin-bottom:4px}
+.end-sub{font-size:0.88rem;color:#666;margin-bottom:20px;line-height:1.7}
+
+@keyframes fadeDown{from{opacity:0;transform:translateY(-18px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+
+/* OPTS */
+.opts-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;max-width:500px;margin-bottom:10px}
+.opt{background:#fff;border:2.5px solid #dde;border-radius:14px;padding:clamp(0.7rem,2.5vw,0.95rem);font-size:clamp(0.82rem,2.6vw,0.96rem);font-family:'Nunito',sans-serif;font-weight:700;cursor:pointer;text-align:center;color:#1A1A2E;box-shadow:0 3px 10px rgba(0,0,0,0.07);transition:transform 0.12s,border-color 0.12s}
+.opt:hover:not(:disabled){transform:scale(1.03)}
+.opt:disabled{cursor:default}
+.opt.correct{background:var(--green-l);border-color:var(--green);color:var(--green)}
+.opt.wrong{background:var(--red-l);border-color:var(--red);color:var(--red)}
+
+/* MEMORAMA */
+.mem-grid{display:grid;gap:clamp(7px,2vw,12px);width:100%}
+.mem-grid.g4x4{grid-template-columns:repeat(4,1fr);max-width:560px}
+.mcard{aspect-ratio:1;border-radius:14px;display:flex;align-items:center;justify-content:center;font-family:'Nunito',sans-serif;font-weight:900;cursor:pointer;user-select:none;transition:transform 0.18s,box-shadow 0.18s;box-shadow:0 4px 12px rgba(0,0,0,0.10);border:3px solid transparent;position:relative;text-align:center;padding:4px;line-height:1.2}
+.mcard.back{color:#fff;font-size:clamp(1.2rem,4vw,1.8rem)}
+.mcard.back:hover{transform:scale(1.07)}
+.mcard.matched{cursor:default;animation:mpop 0.3s ease}
+.mcard.matched::after{content:'✓';position:absolute;top:3px;right:6px;font-size:0.6rem}
+@keyframes mpop{0%{transform:scale(0.9)}60%{transform:scale(1.1)}100%{transform:scale(1)}}
+@keyframes mshake{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+.mcard.shake{animation:mshake 0.35s ease}
+.mcard.back-mul{background:linear-gradient(135deg,var(--c4),var(--c4b))}
+.mcard.mul-op{background:#E6FFF5;color:#0A6040;border-color:#7DDDB5;font-size:clamp(0.65rem,2.2vw,0.9rem)}
+.mcard.mul-res{background:#F5EEFF;color:var(--c3);border-color:#C8A0F0;font-size:clamp(0.85rem,3vw,1.2rem)}
+.mcard.matched-mul{background:#E6FFF5;border-color:var(--c4);color:var(--c4)}
+
+/* ESTADOS */
+.estado-card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:clamp(1.2rem,4vw,2rem);text-align:center;width:100%;max-width:500px;margin-bottom:16px}
+.estado-emoji{font-size:clamp(2.5rem,9vw,4rem);display:block;margin-bottom:8px}
+.estado-name{font-size:clamp(1.3rem,5vw,1.9rem);font-weight:900;color:#1A1A2E;margin-bottom:4px}
+.estado-hint{font-size:0.82rem;color:#999;font-weight:600}
+
+/* INGLÉS */
+.eng-card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:clamp(1.2rem,4vw,2rem);text-align:center;width:100%;max-width:500px;margin-bottom:16px}
+.eng-emoji{font-size:clamp(3rem,11vw,4.5rem);display:block;margin-bottom:8px}
+.eng-esp{font-size:clamp(1.3rem,5vw,1.9rem);font-weight:900;color:#1A1A2E;margin-bottom:4px}
+.eng-phonetic{font-size:clamp(0.88rem,2.8vw,1.05rem);color:var(--c3);font-weight:700;margin-bottom:12px;font-style:italic}
+.speak-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 18px;font-size:13px;font-family:'Nunito',sans-serif;font-weight:700;border-radius:99px;border:2px solid var(--c5);background:#FFF0EA;color:var(--c5);cursor:pointer;margin-bottom:14px;transition:background 0.15s}
+.speak-btn:hover{background:#FFD8C8}.speak-btn.speaking{background:var(--c5);color:#fff}
+.eng-input{width:100%;max-width:300px;padding:12px 16px;font-size:1.1rem;font-family:'Nunito',sans-serif;font-weight:700;border:2.5px solid #dde;border-radius:12px;text-align:center;outline:none;transition:border-color 0.2s;display:block;margin:0 auto}
+.eng-input:focus{border-color:var(--c5)}
+.eng-input.ok{border-color:var(--green);background:var(--green-l);color:var(--green)}
+.eng-input.no{border-color:var(--red);background:var(--red-l);color:var(--red)}
+.submit-btn{margin-top:12px;padding:11px 32px;font-size:1rem;font-family:'Nunito',sans-serif;font-weight:900;border:none;border-radius:12px;background:var(--c5);color:#fff;cursor:pointer;transition:opacity 0.15s;display:block;margin:12px auto 0}
+.submit-btn:hover{opacity:0.85}
+.eng-hint{font-size:0.82rem;color:#888;margin-top:8px;font-weight:600;min-height:22px}
+
+/* PLANETAS */
+.planeta-card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:clamp(1.2rem,4vw,2rem);text-align:center;width:100%;max-width:500px;margin-bottom:16px}
+.planeta-emoji{font-size:clamp(3rem,12vw,5rem);display:block;margin-bottom:6px;filter:drop-shadow(0 4px 12px rgba(0,0,0,0.15))}
+.planeta-dato{font-size:clamp(0.92rem,3vw,1.1rem);font-weight:700;color:#1A1A2E;line-height:1.5;margin-bottom:4px}
+.planeta-pista{font-size:0.8rem;color:#999;font-weight:600}
+
+@media(max-width:360px){.mem-grid.g4x4{gap:5px}.mcard{border-radius:9px}.opts-grid{gap:7px}}
+</style>
+</head>
+<body>
+
+<!-- HOME -->
+<div id="home" class="screen active">
+  <div class="hero">
+    <span class="hero-emoji">🎓</span>
+    <h1>Juegos Educativos</h1>
+    <p>Para el niño de 10 años · ¡Aprende jugando!</p>
+  </div>
+  <div class="games">
+    <div class="game-card c3" onclick="goTo('estados')">
+      <div class="card-header">
+        <span class="card-icon">🗺️</span>
+        <h2>Estados y Capitales</h2>
+        <p>¿Conoces todas las capitales de México?</p>
+      </div>
+      <div class="card-body">
+        <div class="tags"><span class="tag">México</span><span class="tag">Geografía</span><span class="tag">5 vidas</span><span class="tag">Cronómetro</span></div>
+        <button class="play-btn">▶ ¡Jugar ahora!</button>
+      </div>
+    </div>
+    <div class="game-card c4" onclick="goTo('multi')">
+      <div class="card-header">
+        <span class="card-icon">✖️</span>
+        <h2>Memorama de Tablas</h2>
+        <p>Practica las tablas de multiplicar jugando</p>
+      </div>
+      <div class="card-body">
+        <div class="tags"><span class="tag">Tablas</span><span class="tag">Memorama</span><span class="tag">Cronómetro</span></div>
+        <button class="play-btn">▶ ¡Jugar ahora!</button>
+      </div>
+    </div>
+    <div class="game-card c5" onclick="goTo('ingles')">
+      <div class="card-header">
+        <span class="card-icon">✍️</span>
+        <h2>Escribe en Inglés</h2>
+        <p>Aprende palabras con fonética y pronunciación</p>
+      </div>
+      <div class="card-body">
+        <div class="tags"><span class="tag">Inglés</span><span class="tag">Fonética</span><span class="tag">Voz</span><span class="tag">5 vidas</span></div>
+        <button class="play-btn">▶ ¡Jugar ahora!</button>
+      </div>
+    </div>
+    <div class="game-card c6" onclick="goTo('planetas')">
+      <div class="card-header">
+        <span class="card-icon">🪐</span>
+        <h2>Los Planetas</h2>
+        <p>Adivina el planeta por sus características</p>
+      </div>
+      <div class="card-body">
+        <div class="tags"><span class="tag">Ciencias</span><span class="tag">Sistema Solar</span><span class="tag">Cronómetro</span></div>
+        <button class="play-btn">▶ ¡Jugar ahora!</button>
+      </div>
+    </div>
+  </div>
+  <footer>Hecho con <span>♥</span> para aprender jugando</footer>
+</div>
+
+<!-- ESTADOS Y CAPITALES -->
+<div id="estados" class="screen">
+  <div class="game-nav">
+    <h2>🗺️ Estados y Capitales</h2>
+    <div class="nav-right">
+      <span class="timer-badge" id="est-timer">00:00</span>
+      <span class="lives-disp" id="est-lives">❤️❤️❤️❤️❤️</span>
+      <button class="back-btn" onclick="goTo('home')">← Inicio</button>
+    </div>
+  </div>
+  <div class="game-inner">
+    <div class="topbar" style="max-width:500px">
+      <div class="stats">
+        <div class="stat">Aciertos: <b id="est-score">0</b></div>
+        <div class="stat">Pregunta: <b id="est-qnum">1</b>/10</div>
+      </div>
+      <button class="g-btn" onclick="estInit()">🔀 Nueva</button>
+    </div>
+    <div class="progress-wrap"><div class="progress-bar" id="est-bar" style="width:0%;background:var(--c3)"></div></div>
+    <div id="est-game">
+      <div class="estado-card">
+        <span class="estado-emoji" id="est-emoji"></span>
+        <div class="estado-name" id="est-name"></div>
+        <div class="estado-hint">¿Cuál es su capital?</div>
+      </div>
+      <div class="opts-grid" id="est-opts"></div>
+      <div class="feedback" id="est-fb"></div>
+    </div>
+    <div id="est-end" style="display:none;width:100%;max-width:500px"></div>
+  </div>
+</div>
+
+<!-- MEMORAMA TABLAS -->
+<div id="multi" class="screen">
+  <div class="game-nav">
+    <h2>✖️ Memorama de Tablas</h2>
+    <div class="nav-right">
+      <span class="timer-badge" id="mul-timer">00:00</span>
+      <button class="back-btn" onclick="goTo('home')">← Inicio</button>
+    </div>
+  </div>
+  <div class="game-inner">
+    <div class="topbar">
+      <div class="stats">
+        <div class="stat">Parejas: <b id="mul-pairs">0</b>/8</div>
+        <div class="stat">Intentos: <b id="mul-tries">0</b></div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <select id="mul-tabla" onchange="multiInit()" style="padding:6px 10px;border-radius:99px;border:1.5px solid #ddd;font-family:'Nunito',sans-serif;font-weight:700;font-size:13px;background:#fff">
+          <option value="0">Tabla aleatoria</option>
+          <option value="2">× 2</option><option value="3">× 3</option>
+          <option value="4">× 4</option><option value="5">× 5</option>
+          <option value="6">× 6</option><option value="7">× 7</option>
+          <option value="8">× 8</option><option value="9">× 9</option>
+        </select>
+        <button class="g-btn" onclick="multiInit()">🔀 Nueva</button>
+      </div>
+    </div>
+    <div class="mem-grid g4x4" id="mul-grid"></div>
+    <div class="feedback" id="mul-fb"></div>
+  </div>
+</div>
+
+<!-- INGLÉS ESCRITURA -->
+<div id="ingles" class="screen">
+  <div class="game-nav">
+    <h2>✍️ Escribe en Inglés</h2>
+    <div class="nav-right">
+      <span class="timer-badge" id="ing-timer">00:00</span>
+      <span class="lives-disp" id="ing-lives">❤️❤️❤️❤️❤️</span>
+      <button class="back-btn" onclick="goTo('home')">← Inicio</button>
+    </div>
+  </div>
+  <div class="game-inner">
+    <div class="topbar" style="max-width:500px">
+      <div class="stats">
+        <div class="stat">Aciertos: <b id="ing-score">0</b></div>
+        <div class="stat">Pregunta: <b id="ing-qnum">1</b>/10</div>
+      </div>
+      <button class="g-btn" onclick="ingInit()">🔀 Nueva</button>
+    </div>
+    <div class="progress-wrap"><div class="progress-bar" id="ing-bar" style="width:0%;background:var(--c5)"></div></div>
+    <div id="ing-game">
+      <div class="eng-card">
+        <span class="eng-emoji" id="ing-emoji"></span>
+        <div class="eng-esp" id="ing-esp"></div>
+        <div class="eng-phonetic" id="ing-phonetic"></div>
+        <button class="speak-btn" id="ing-speakbtn" onclick="speakCurrent()">🔊 Escuchar pronunciación</button>
+        <input class="eng-input" id="ing-input" type="text" placeholder="Escribe en inglés..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+        <div class="eng-hint" id="ing-hint"></div>
+        <button class="submit-btn" onclick="ingSubmit()">Verificar ✓</button>
+      </div>
+      <div class="feedback" id="ing-fb"></div>
+    </div>
+    <div id="ing-end" style="display:none;width:100%;max-width:500px"></div>
+  </div>
+</div>
+
+<!-- PLANETAS -->
+<div id="planetas" class="screen">
+  <div class="game-nav">
+    <h2>🪐 Los Planetas del Sistema Solar</h2>
+    <div class="nav-right">
+      <span class="timer-badge" id="pla-timer">00:00</span>
+      <button class="back-btn" onclick="goTo('home')">← Inicio</button>
+    </div>
+  </div>
+  <div class="game-inner">
+    <div class="topbar" style="max-width:500px">
+      <div class="stats">
+        <div class="stat">Aciertos: <b id="pla-score">0</b></div>
+        <div class="stat">Pregunta: <b id="pla-qnum">1</b>/16</div>
+      </div>
+      <button class="g-btn" onclick="plaInit()">🔀 Nueva</button>
+    </div>
+    <div class="progress-wrap"><div class="progress-bar" id="pla-bar" style="width:0%;background:var(--c6)"></div></div>
+    <div id="pla-game">
+      <div class="planeta-card">
+        <span class="planeta-emoji" id="pla-emoji"></span>
+        <div class="planeta-dato" id="pla-dato"></div>
+        <div class="planeta-pista" id="pla-pista"></div>
+      </div>
+      <div class="opts-grid" id="pla-opts"></div>
+      <div class="feedback" id="pla-fb"></div>
+    </div>
+    <div id="pla-end" style="display:none;width:100%;max-width:500px"></div>
+  </div>
+</div>
+
+<script>
+/* ══ PLANETAS ══ */
+const planetas=[
+  {
+    nombre:'Mercurio', emoji:'⚫',
+    preguntas:[
+      {dato:'Soy el planeta más cercano al Sol.',pista:'Soy muy pequeño y muy caliente de día.'},
+      {dato:'Soy el planeta más pequeño del Sistema Solar.',pista:'Estoy en el primer lugar desde el Sol.'},
+      {dato:'Un año en mí dura solo 88 días terrestres.',pista:'Tardo muy poco en dar la vuelta al Sol porque estoy muy cerca.'},
+    ]
+  },
+  {
+    nombre:'Venus', emoji:'🟡',
+    preguntas:[
+      {dato:'Soy el planeta más caliente del Sistema Solar, ¡más que Mercurio!',pista:'Tengo una atmósfera muy densa de CO₂ que atrapa el calor.'},
+      {dato:'Giro al revés comparado con la mayoría de los planetas.',pista:'En mí, el Sol sale por el oeste y se pone por el este.'},
+      {dato:'Soy el segundo planeta desde el Sol y el más brillante en el cielo nocturno.',pista:'A veces me llaman "el lucero del alba".'},
+    ]
+  },
+  {
+    nombre:'Tierra', emoji:'🌍',
+    preguntas:[
+      {dato:'Soy el único planeta conocido con vida.',pista:'Tengo agua líquida en mi superficie y una atmósfera perfecta.'},
+      {dato:'Tengo un satélite natural llamado Luna.',pista:'Soy el tercer planeta desde el Sol.'},
+      {dato:'El 71% de mi superficie está cubierta de agua.',pista:'Por eso desde el espacio me veo azul.'},
+    ]
+  },
+  {
+    nombre:'Marte', emoji:'🔴',
+    preguntas:[
+      {dato:'Me llaman el "planeta rojo" por el óxido de hierro en mi superficie.',pista:'Soy el cuarto planeta desde el Sol.'},
+      {dato:'Tengo el volcán más alto del Sistema Solar: el Monte Olimpo.',pista:'Mi volcán mide casi 22 km de altura.'},
+      {dato:'Tengo dos pequeñas lunas llamadas Fobos y Deimos.',pista:'Soy el vecino de la Tierra por el lado exterior.'},
+    ]
+  },
+  {
+    nombre:'Júpiter', emoji:'🟠',
+    preguntas:[
+      {dato:'Soy el planeta más grande del Sistema Solar.',pista:'Soy tan grande que cabrían más de 1,300 Tierras dentro de mí.'},
+      {dato:'Tengo una tormenta llamada la Gran Mancha Roja que lleva siglos activa.',pista:'Soy el quinto planeta desde el Sol.'},
+      {dato:'Tengo más de 90 lunas conocidas.',pista:'Soy un gigante gaseoso con franjas de nubes de colores.'},
+    ]
+  },
+  {
+    nombre:'Saturno', emoji:'🪐',
+    preguntas:[
+      {dato:'Soy famoso por mis hermosos anillos de hielo y roca.',pista:'Soy el sexto planeta desde el Sol.'},
+      {dato:'Soy el planeta menos denso del Sistema Solar. ¡Flotaría en agua!',pista:'Soy un gigante gaseoso con anillos visibles.'},
+      {dato:'Mi luna Titán tiene una atmósfera densa y ríos de metano.',pista:'Tengo más de 80 lunas y soy el segundo más grande.'},
+    ]
+  },
+  {
+    nombre:'Urano', emoji:'🔵',
+    preguntas:[
+      {dato:'Giro de lado: mi eje está inclinado casi 98 grados.',pista:'Soy el séptimo planeta desde el Sol.'},
+      {dato:'Soy el planeta más frío del Sistema Solar.',pista:'Mi temperatura puede bajar a -224°C.'},
+      {dato:'Me llaman un "gigante de hielo" junto con Neptuno.',pista:'Tengo un color azul verdoso por el metano en mi atmósfera.'},
+    ]
+  },
+  {
+    nombre:'Neptuno', emoji:'💙',
+    preguntas:[
+      {dato:'Soy el planeta más alejado del Sol.',pista:'Soy el octavo y último planeta del Sistema Solar.'},
+      {dato:'Tengo los vientos más rápidos del Sistema Solar, hasta 2,100 km/h.',pista:'Soy azul oscuro y muy frío.'},
+      {dato:'Mi luna más grande se llama Tritón y gira en dirección contraria.',pista:'Soy un gigante de hielo de color azul intenso.'},
+    ]
+  },
+];
+
+let plaPreguntas,plaCur,plaScore,plaAnswered;
+
+function plaInit(){
+  plaScore=0;plaCur=0;plaAnswered=false;
+  $('pla-score').textContent=0;$('pla-qnum').textContent=1;
+  $('pla-bar').style.width='0%';$('pla-fb').textContent='';$('pla-fb').className='feedback';
+  $('pla-timer').classList.remove('warn');
+  $('pla-game').style.display='block';$('pla-end').style.display='none';
+
+  // Construir lista de preguntas: 2 por planeta = 16 total
+  plaPreguntas=[];
+  planetas.forEach(p=>{
+    const qs=shuffle([...p.preguntas]).slice(0,2);
+    qs.forEach(q=>plaPreguntas.push({planeta:p.nombre,emoji:p.emoji,dato:q.dato,pista:q.pista}));
+  });
+  shuffle(plaPreguntas);
+  $('pla-qnum').textContent='1';
+  document.querySelector('#planetas .stat:last-child b').textContent='1';
+  startTimer('pla','pla-timer');
+  plaRender();
+}
+
+function plaRender(){
+  if(plaCur>=plaPreguntas.length){stopTimer('pla');plaEnd();return;}
+  plaAnswered=false;
+  const q=plaPreguntas[plaCur];
+  $('pla-emoji').textContent=q.emoji;
+  $('pla-dato').textContent=q.dato;
+  $('pla-pista').textContent='Pista: '+q.pista;
+  $('pla-qnum').textContent=plaCur+1;
+  $('pla-bar').style.width=(plaCur/plaPreguntas.length*100)+'%';
+  $('pla-fb').textContent='';$('pla-fb').className='feedback';
+
+  const otros=planetas.filter(p=>p.nombre!==q.planeta);
+  shuffle(otros);
+  const opts=shuffle([q.planeta,...otros.slice(0,3).map(p=>p.nombre)]);
+  const c=$('pla-opts');c.innerHTML='';
+  opts.forEach(o=>{
+    const btn=document.createElement('button');
+    btn.className='opt';btn.textContent=o;
+    btn.onclick=()=>plaPick(btn,o,q.planeta);
+    c.appendChild(btn);
+  });
+}
+
+function plaPick(btn,chosen,correct){
+  if(plaAnswered)return;
+  plaAnswered=true;
+  document.querySelectorAll('#pla-opts .opt').forEach(b=>b.disabled=true);
+  if(chosen===correct){
+    playBeep('ok');btn.classList.add('correct');
+    $('pla-fb').textContent='¡Correcto! ✓';$('pla-fb').className='feedback fb-ok';
+    plaScore++;$('pla-score').textContent=plaScore;
+    setTimeout(()=>{plaCur++;plaRender();},1300);
+  } else {
+    playBeep('no');btn.classList.add('wrong');
+    document.querySelectorAll('#pla-opts .opt').forEach(b=>{if(b.textContent===correct)b.classList.add('correct');});
+    $('pla-fb').textContent='Era: '+correct;$('pla-fb').className='feedback fb-no';
+    setTimeout(()=>{plaCur++;plaRender();},1500);
+  }
+}
+
+function plaEnd(){
+  $('pla-game').style.display='none';
+  const el=$('pla-end');el.style.display='block';
+  const t=$('pla-timer').textContent;
+  const pct=plaScore/plaPreguntas.length;
+  const emoji=pct===1?'🏆':pct>=0.75?'⭐':pct>=0.5?'🌟':'🚀';
+  const msg=pct===1?'¡Astrónomo experto!':pct>=0.75?'¡Conoces bien el espacio!':pct>=0.5?'¡Buen intento!':'¡Sigue explorando el universo!';
+  el.innerHTML=`<div class="endbox"><span class="end-emoji">${emoji}</span>
+    <div class="end-title">${msg}</div>
+    <div class="end-sub">${plaScore} de ${plaPreguntas.length} correctas · ⏱ Tiempo: ${t}</div>
+    <button class="g-btn" onclick="plaInit()">🔀 Jugar de nuevo</button></div>`;
+}
+</script>
+
+
+
+/* SONIDO */
+function playBeep(type){
+  try{
+    const ctx=new(window.AudioContext||window.webkitAudioContext)();
+    const o=ctx.createOscillator(),g=ctx.createGain();
+    o.connect(g);g.connect(ctx.destination);
+    if(type==='ok'){
+      o.frequency.setValueAtTime(523,ctx.currentTime);
+      o.frequency.setValueAtTime(659,ctx.currentTime+0.1);
+      o.frequency.setValueAtTime(784,ctx.currentTime+0.2);
+      g.gain.setValueAtTime(0.25,ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.5);
+      o.start();o.stop(ctx.currentTime+0.5);
+    } else {
+      o.type='sawtooth';
+      o.frequency.setValueAtTime(220,ctx.currentTime);
+      o.frequency.exponentialRampToValueAtTime(100,ctx.currentTime+0.4);
+      g.gain.setValueAtTime(0.2,ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.4);
+      o.start();o.stop(ctx.currentTime+0.4);
+    }
+  }catch(e){}
+}
+
+function speakEN(word){
+  if(!window.speechSynthesis)return;
+  window.speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(word);
+  u.lang='en-US';u.rate=0.8;u.pitch=1.05;
+  window.speechSynthesis.speak(u);
+}
+
+/* TIMER */
+let timers={};
+function startTimer(key,badgeId){
+  clearInterval(timers[key]);
+  let s=0;
+  timers[key]=setInterval(()=>{
+    s++;
+    const b=$(badgeId);
+    if(b){
+      b.textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
+      b.classList.toggle('warn',s>90);
+    }
+  },1000);
+}
+function stopTimer(key){clearInterval(timers[key]);}
+
+/* NAVEGACION */
+function goTo(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  $(id).classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+  Object.keys(timers).forEach(k=>stopTimer(k));
+  if(window.speechSynthesis)window.speechSynthesis.cancel();
+  if(id==='estados') estInit();
+  if(id==='multi')   multiInit();
+  if(id==='ingles')  ingInit();
+  if(id==='planetas') plaInit();
+}
+
+/* ══ ESTADOS Y CAPITALES ══ */
+const estados=[
+  {estado:'Aguascalientes',capital:'Aguascalientes',emoji:'🌺'},
+  {estado:'Baja California',capital:'Mexicali',emoji:'🌵'},
+  {estado:'Baja California Sur',capital:'La Paz',emoji:'🐋'},
+  {estado:'Campeche',capital:'Campeche',emoji:'⚔️'},
+  {estado:'Chiapas',capital:'Tuxtla Gutiérrez',emoji:'🌿'},
+  {estado:'Chihuahua',capital:'Chihuahua',emoji:'🏜️'},
+  {estado:'Ciudad de México',capital:'Ciudad de México',emoji:'🏙️'},
+  {estado:'Coahuila',capital:'Saltillo',emoji:'🌾'},
+  {estado:'Colima',capital:'Colima',emoji:'🌋'},
+  {estado:'Durango',capital:'Durango',emoji:'🦅'},
+  {estado:'Guanajuato',capital:'Guanajuato',emoji:'🎭'},
+  {estado:'Guerrero',capital:'Chilpancingo',emoji:'🏖️'},
+  {estado:'Hidalgo',capital:'Pachuca',emoji:'⛏️'},
+  {estado:'Jalisco',capital:'Guadalajara',emoji:'🎺'},
+  {estado:'Estado de México',capital:'Toluca',emoji:'🏔️'},
+  {estado:'Michoacán',capital:'Morelia',emoji:'🦋'},
+  {estado:'Morelos',capital:'Cuernavaca',emoji:'🌸'},
+  {estado:'Nayarit',capital:'Tepic',emoji:'🌊'},
+  {estado:'Nuevo León',capital:'Monterrey',emoji:'🏭'},
+  {estado:'Oaxaca',capital:'Oaxaca de Juárez',emoji:'🎨'},
+  {estado:'Puebla',capital:'Puebla',emoji:'🏺'},
+  {estado:'Querétaro',capital:'Querétaro',emoji:'🔔'},
+  {estado:'Quintana Roo',capital:'Chetumal',emoji:'🐠'},
+  {estado:'San Luis Potosí',capital:'San Luis Potosí',emoji:'💎'},
+  {estado:'Sinaloa',capital:'Culiacán',emoji:'🌽'},
+  {estado:'Sonora',capital:'Hermosillo',emoji:'☀️'},
+  {estado:'Tabasco',capital:'Villahermosa',emoji:'🛢️'},
+  {estado:'Tamaulipas',capital:'Ciudad Victoria',emoji:'🦅'},
+  {estado:'Tlaxcala',capital:'Tlaxcala',emoji:'🏟️'},
+  {estado:'Veracruz',capital:'Xalapa',emoji:'☕'},
+  {estado:'Yucatán',capital:'Mérida',emoji:'🏛️'},
+  {estado:'Zacatecas',capital:'Zacatecas',emoji:'🥈'},
+];
+let estQ,estCur,estScore,estAnswered,estLives;
+
+function estInit(){
+  estScore=0;estCur=0;estAnswered=false;estLives=5;
+  $('est-score').textContent=0;$('est-qnum').textContent=1;
+  $('est-bar').style.width='0%';$('est-fb').textContent='';$('est-fb').className='feedback';
+  $('est-lives').textContent='❤️❤️❤️❤️❤️';$('est-timer').classList.remove('warn');
+  $('est-game').style.display='block';$('est-end').style.display='none';
+  estQ=shuffle([...estados]).slice(0,10);
+  startTimer('est','est-timer');
+  estRender();
+}
+function estRender(){
+  if(estCur>=estQ.length||estLives<=0){stopTimer('est');estEnd();return;}
+  estAnswered=false;
+  const q=estQ[estCur];
+  $('est-emoji').textContent=q.emoji;$('est-name').textContent=q.estado;
+  $('est-qnum').textContent=estCur+1;
+  $('est-bar').style.width=(estCur/estQ.length*100)+'%';
+  $('est-fb').textContent='';$('est-fb').className='feedback';
+  const pool=estados.filter(e=>e!==q);shuffle(pool);
+  const opts=shuffle([q.capital,...pool.slice(0,3).map(e=>e.capital)]);
+  const c=$('est-opts');c.innerHTML='';
+  opts.forEach(o=>{
+    const btn=document.createElement('button');
+    btn.className='opt';btn.textContent=o;
+    btn.onclick=()=>estPick(btn,o,q.capital);
+    c.appendChild(btn);
+  });
+}
+function estPick(btn,chosen,correct){
+  if(estAnswered)return;
+  estAnswered=true;
+  document.querySelectorAll('#est-opts .opt').forEach(b=>b.disabled=true);
+  if(chosen===correct){
+    playBeep('ok');btn.classList.add('correct');
+    $('est-fb').textContent='¡Correcto! ✓';$('est-fb').className='feedback fb-ok';
+    estScore++;$('est-score').textContent=estScore;
+    setTimeout(()=>{estCur++;estRender();},1300);
+  } else {
+    playBeep('no');btn.classList.add('wrong');
+    document.querySelectorAll('#est-opts .opt').forEach(b=>{if(b.textContent===correct)b.classList.add('correct');});
+    estLives--;
+    $('est-lives').textContent='❤️'.repeat(estLives)+'🖤'.repeat(5-estLives);
+    $('est-fb').textContent='Era: '+correct;$('est-fb').className='feedback fb-no';
+    if(estLives<=0){setTimeout(()=>{stopTimer('est');estEnd();},1400);return;}
+    setTimeout(()=>{estCur++;estRender();},1400);
+  }
+}
+function estEnd(){
+  $('est-game').style.display='none';
+  const el=$('est-end');el.style.display='block';
+  const t=$('est-timer').textContent;
+  const emoji=estLives===0?'💔':estScore>=8?'🏆':estScore>=5?'⭐':'💪';
+  const msg=estLives===0?'¡Sin vidas! A repasar el mapa':estScore>=8?'¡Experto en México!':estScore>=5?'¡Muy bien!':'¡Sigue estudiando!';
+  el.innerHTML=`<div class="endbox"><span class="end-emoji">${emoji}</span>
+    <div class="end-title">${msg}</div>
+    <div class="end-sub">${estScore} respuestas correctas de ${estCur}<br>⏱ Tiempo: ${t} &nbsp;·&nbsp; Vidas: ${'❤️'.repeat(estLives)+'🖤'.repeat(5-estLives)}</div>
+    <button class="g-btn" onclick="estInit()">🔀 Jugar de nuevo</button></div>`;
+}
+
+/* ══ MEMORAMA TABLAS ══ */
+let mulFlipped=[],mulMatched=0,mulTries=0,mulLock=false;
+function multiInit(){
+  mulFlipped=[];mulMatched=0;mulTries=0;mulLock=false;
+  $('mul-pairs').textContent=0;$('mul-tries').textContent=0;
+  $('mul-fb').textContent='';$('mul-fb').className='feedback';
+  $('mul-timer').classList.remove('warn');
+  startTimer('multi','mul-timer');
+  const tv=parseInt($('mul-tabla').value)||0;
+  const tabla=tv>0?tv:Math.floor(Math.random()*8)+2;
+  const all=[];
+  for(let i=1;i<=10;i++)all.push({id:i,op:tabla+'×'+i,res:String(tabla*i)});
+  shuffle(all);const sel=all.slice(0,8);
+  const cards=shuffle([
+    ...sel.map(p=>({id:p.id,type:'op',label:p.op})),
+    ...sel.map(p=>({id:p.id,type:'res',label:p.res})),
+  ]);
+  const grid=$('mul-grid');grid.innerHTML='';
+  cards.forEach(c=>{
+    const el=document.createElement('div');
+    el.className='mcard back back-mul';el.textContent='?';
+    el.addEventListener('click',()=>mulFlip(el,c));
+    grid.appendChild(el);
+  });
+}
+function mulFlip(el,c){
+  if(mulLock||!el.classList.contains('back'))return;
+  el.classList.remove('back','back-mul');
+  el.classList.add(c.type==='op'?'mul-op':'mul-res');
+  el.textContent=c.label;
+  mulFlipped.push({el,c});
+  if(mulFlipped.length===2){
+    mulLock=true;mulTries++;$('mul-tries').textContent=mulTries;
+    const[a,b]=mulFlipped;
+    if(a.c.id===b.c.id&&a.c.type!==b.c.type){
+      playBeep('ok');
+      a.el.classList.replace(a.c.type==='op'?'mul-op':'mul-res','matched-mul');
+      b.el.classList.replace(b.c.type==='op'?'mul-op':'mul-res','matched-mul');
+      a.el.classList.add('matched');b.el.classList.add('matched');
+      mulMatched++;$('mul-pairs').textContent=mulMatched;
+      $('mul-fb').textContent='¡Correcto! ✓';$('mul-fb').className='feedback fb-ok';
+      mulFlipped=[];mulLock=false;
+      if(mulMatched===8){stopTimer('multi');setTimeout(mulEnd,500);}
+    } else {
+      playBeep('no');
+      $('mul-fb').textContent='¡Sigue intentando!';$('mul-fb').className='feedback fb-no';
+      [a,b].forEach(x=>x.el.classList.add('shake'));
+      setTimeout(()=>{
+        [a,b].forEach(x=>{x.el.classList.remove('shake');x.el.className='mcard back back-mul';x.el.textContent='?';});
+        $('mul-fb').textContent='';$('mul-fb').className='feedback';
+        mulFlipped=[];mulLock=false;
+      },900);
+    }
+  }
+}
+function mulEnd(){
+  const t=$('mul-timer').textContent;
+  const s=mulTries<=10?'🏆':mulTries<=16?'⭐':'💪';
+  const msg=mulTries<=10?'¡Crack de las tablas!':mulTries<=16?'¡Muy bien!':'¡Lo lograste!';
+  $('mul-grid').innerHTML=`<div style="grid-column:1/-1" class="endbox">
+    <span class="end-emoji">${s}</span><div class="end-title">${msg}</div>
+    <div class="end-sub">En ${mulTries} intentos · ⏱ Tiempo: ${t}</div>
+    <button class="g-btn" onclick="multiInit()">🔀 Jugar de nuevo</button></div>`;
+  $('mul-fb').textContent='';
+}
+
+/* ══ INGLÉS ESCRITURA ══ */
+const vocab=[
+  {es:'Manzana',en:'Apple',ph:'A-pol',emoji:'🍎'},
+  {es:'Perro',en:'Dog',ph:'Dog',emoji:'🐶'},
+  {es:'Casa',en:'House',ph:'Jaus',emoji:'🏠'},
+  {es:'Agua',en:'Water',ph:'Wó-ter',emoji:'💧'},
+  {es:'Libro',en:'Book',ph:'Buk',emoji:'📚'},
+  {es:'Escuela',en:'School',ph:'Skuul',emoji:'🏫'},
+  {es:'Amigo',en:'Friend',ph:'Frend',emoji:'🤝'},
+  {es:'Gato',en:'Cat',ph:'Kat',emoji:'🐱'},
+  {es:'Silla',en:'Chair',ph:'Cher',emoji:'🪑'},
+  {es:'Mesa',en:'Table',ph:'Téi-bol',emoji:'🪵'},
+  {es:'Lápiz',en:'Pencil',ph:'Pen-sil',emoji:'✏️'},
+  {es:'Pelota',en:'Ball',ph:'Bol',emoji:'⚽'},
+  {es:'Árbol',en:'Tree',ph:'Tri',emoji:'🌳'},
+  {es:'Leche',en:'Milk',ph:'Milk',emoji:'🥛'},
+  {es:'Pan',en:'Bread',ph:'Bred',emoji:'🍞'},
+  {es:'Zapato',en:'Shoe',ph:'Shu',emoji:'👟'},
+  {es:'Camisa',en:'Shirt',ph:'Shert',emoji:'👕'},
+  {es:'Sol',en:'Sun',ph:'San',emoji:'☀️'},
+  {es:'Luna',en:'Moon',ph:'Muun',emoji:'🌙'},
+  {es:'Carro',en:'Car',ph:'Kar',emoji:'🚗'},
+  {es:'Avión',en:'Airplane',ph:'Éir-plein',emoji:'✈️'},
+  {es:'Flor',en:'Flower',ph:'Fláu-er',emoji:'🌸'},
+  {es:'Mano',en:'Hand',ph:'Jand',emoji:'✋'},
+  {es:'Ojo',en:'Eye',ph:'Ai',emoji:'👁️'},
+  {es:'Nariz',en:'Nose',ph:'Nous',emoji:'👃'},
+  {es:'Corazón',en:'Heart',ph:'Jart',emoji:'❤️'},
+  {es:'Estrella',en:'Star',ph:'Star',emoji:'⭐'},
+  {es:'Mariposa',en:'Butterfly',ph:'Ba-ter-flai',emoji:'🦋'},
+  {es:'Pájaro',en:'Bird',ph:'Berd',emoji:'🐦'},
+  {es:'Naranja',en:'Orange',ph:'O-rench',emoji:'🍊'},
+];
+let ingQ,ingCur,ingScore,ingLives,ingCurWord='';
+
+function speakCurrent(){
+  const btn=$('ing-speakbtn');
+  speakEN(ingCurWord);
+  if(btn){btn.classList.add('speaking');setTimeout(()=>btn.classList.remove('speaking'),1000);}
+}
+function ingInit(){
+  ingScore=0;ingCur=0;ingLives=5;
+  $('ing-score').textContent=0;$('ing-qnum').textContent=1;
+  $('ing-bar').style.width='0%';$('ing-fb').textContent='';$('ing-fb').className='feedback';
+  $('ing-lives').textContent='❤️❤️❤️❤️❤️';$('ing-timer').classList.remove('warn');
+  $('ing-game').style.display='block';$('ing-end').style.display='none';
+  $('ing-input').value='';$('ing-input').className='eng-input';$('ing-input').disabled=false;
+  $('ing-hint').textContent='';
+  ingQ=shuffle([...vocab]).slice(0,10);
+  startTimer('ing','ing-timer');
+  ingRender();
+}
+function ingRender(){
+  if(ingCur>=ingQ.length||ingLives<=0){stopTimer('ing');ingEnd();return;}
+  const q=ingQ[ingCur];
+  ingCurWord=q.en;
+  $('ing-emoji').textContent=q.emoji;
+  $('ing-esp').textContent=q.es;
+  $('ing-phonetic').textContent='📢 Se pronuncia: '+q.ph;
+  $('ing-qnum').textContent=ingCur+1;
+  $('ing-bar').style.width=(ingCur/ingQ.length*100)+'%';
+  $('ing-fb').textContent='';$('ing-fb').className='feedback';
+  $('ing-input').value='';$('ing-input').className='eng-input';$('ing-input').disabled=false;
+  $('ing-hint').textContent='Escucha y escribe la palabra en inglés';
+  $('ing-speakbtn').classList.remove('speaking');
+  setTimeout(()=>speakCurrent(),500);
+  setTimeout(()=>$('ing-input').focus(),600);
+}
+function ingSubmit(){
+  if(ingLives<=0||$('ing-input').disabled)return;
+  const val=$('ing-input').value.trim();
+  if(!val){$('ing-hint').textContent='¡Escribe algo primero!';return;}
+  const q=ingQ[ingCur];
+  const ok=val.toLowerCase()===q.en.toLowerCase();
+  if(ok){
+    playBeep('ok');
+    $('ing-input').className='eng-input ok';$('ing-input').disabled=true;
+    $('ing-fb').textContent='¡Perfecto! ✓';$('ing-fb').className='feedback fb-ok';
+    $('ing-hint').textContent='';
+    ingScore++;$('ing-score').textContent=ingScore;
+    speakEN(q.en);
+    setTimeout(()=>{ingCur++;ingRender();},1600);
+  } else {
+    playBeep('no');
+    $('ing-input').className='eng-input no';
+    ingLives--;
+    $('ing-lives').textContent='❤️'.repeat(ingLives)+'🖤'.repeat(5-ingLives);
+    if(ingLives<=0){
+      $('ing-input').disabled=true;
+      $('ing-fb').textContent='La respuesta era: '+q.en;$('ing-fb').className='feedback fb-no';
+      $('ing-hint').textContent='';
+      setTimeout(()=>{stopTimer('ing');ingEnd();},1600);
+    } else {
+      $('ing-fb').textContent='Incorrecto ✗';$('ing-fb').className='feedback fb-no';
+      const rev=Math.min(6-ingLives,q.en.length-1);
+      $('ing-hint').textContent='Pista: "'+q.en.substring(0,rev+1)+'..." · '+ingLives+' vidas restantes';
+      setTimeout(()=>{$('ing-input').className='eng-input';$('ing-input').value='';$('ing-input').focus();},700);
+    }
+  }
+}
+document.addEventListener('DOMContentLoaded',()=>{
+  $('ing-input').addEventListener('keydown',e=>{if(e.key==='Enter')ingSubmit();});
+});
+</script>
+</body>
+</html>
